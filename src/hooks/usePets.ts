@@ -2,9 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { fetchPetSize, fetchPets } from '@/api/pets';
 import type { Pet } from '@/types/pet';
 
-// Required custom hook for "Loading and Managing Data". Surfaces explicit
-// loading / error / empty states plus a `refetch` for the retry button.
-
 export type PetsStatus = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 
 export interface UsePetsResult {
@@ -18,7 +15,6 @@ export function usePets(): UsePetsResult {
   const [pets, setPets] = useState<Pet[]>([]);
   const [status, setStatus] = useState<PetsStatus>('idle');
   const [error, setError] = useState<Error | null>(null);
-  // `tick` is a manual cache-buster so refetch() can force a re-run.
   const [tick, setTick] = useState(0);
 
   const refetch = useCallback(() => setTick((t) => t + 1), []);
@@ -36,9 +32,6 @@ export function usePets(): UsePetsResult {
         setPets(data);
         setStatus(data.length === 0 ? 'empty' : 'success');
 
-        // Best-effort, fire-and-forget HEAD probes to fill in file sizes.
-        // Concurrency is naturally bounded by the small list size; we
-        // batch updates to avoid one re-render per pet.
         void hydrateSizes(data, (updates) => {
           if (cancelled) return;
           setPets((prev) =>
@@ -63,9 +56,7 @@ export function usePets(): UsePetsResult {
   return { pets, status, error, refetch };
 }
 
-// Hydrate sizes in chunks of 6 to avoid hammering the CDN; flush each
-// chunk to the consumer as a Map so we re-render at most a handful of
-// times during the warm-up.
+
 async function hydrateSizes(
   pets: Pet[],
   flush: (updates: Map<string, number | null>) => void,

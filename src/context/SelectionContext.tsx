@@ -8,9 +8,6 @@ import {
 } from 'react';
 import type { Pet } from '@/types/pet';
 
-// Selection lives at app root so it survives navigation between routes
-// (e.g. opening a pet detail and coming back must not lose checkboxes).
-
 interface SelectionContextValue {
   selectedIds: Set<string>;
   isSelected: (id: string) => boolean;

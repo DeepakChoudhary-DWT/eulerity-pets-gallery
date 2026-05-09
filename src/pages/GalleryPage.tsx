@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { usePets } from '@/hooks/usePets';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -34,6 +34,32 @@ const Heading = styled.h1`
   margin: 0 0 16px;
   font-size: 28px;
   letter-spacing: -0.01em;
+`;
+
+const PageFooter = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0 8px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 13px;
+`;
+
+// Keyboard-accessible fallback for users who can't trigger the scroll
+// sentinel (screen readers, tab navigation, prefers-reduced-motion, etc.).
+const LoadMoreBtn = styled.button`
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text};
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.radii.md};
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+
+  &:hover { border-color: ${({ theme }) => theme.colors.accent}; color: ${({ theme }) => theme.colors.accent}; }
 `;
 
 /**
@@ -104,6 +130,13 @@ export function GalleryPage() {
     setPageCount((c) => c + 1);
   }, []);
 
+  // If the underlying pet list changes (e.g. successful refetch after an
+  // error), snap back to the first page so we don't end up showing a stale
+  // page-count window into a freshly refreshed list.
+  useEffect(() => {
+    setPageCount(1);
+  }, [pets]);
+
   const sentinelRef = useInfiniteScroll<HTMLDivElement>(loadMore, hasMore);
 
   return (
@@ -154,9 +187,27 @@ export function GalleryPage() {
             ))}
           </PetGrid>
           {hasMore && (
-            <Sentinel ref={sentinelRef} aria-hidden>
-              <Spinner />
-            </Sentinel>
+            <>
+              <Sentinel ref={sentinelRef} aria-hidden>
+                <Spinner />
+              </Sentinel>
+              <PageFooter>
+                <span>
+                  Showing <strong>{visibleSlice.length}</strong> of{' '}
+                  <strong>{visiblePets.length}</strong>
+                </span>
+                <LoadMoreBtn type="button" onClick={loadMore}>
+                  Load more
+                </LoadMoreBtn>
+              </PageFooter>
+            </>
+          )}
+          {!hasMore && visiblePets.length > PAGE_SIZE && (
+            <PageFooter>
+              <span>
+                Showing all <strong>{visiblePets.length}</strong> pets
+              </span>
+            </PageFooter>
           )}
         </>
       )}

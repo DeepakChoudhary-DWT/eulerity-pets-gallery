@@ -1,10 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-/**
- * Calls `onIntersect` once each time the returned ref enters the viewport.
- * Used to drive infinite scroll: a sentinel <div ref={...}/> at the end of
- * the grid triggers loading the next page.
- */
+
 export function useInfiniteScroll<T extends HTMLElement>(
   onIntersect: () => void,
   enabled: boolean,
